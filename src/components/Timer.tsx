@@ -126,23 +126,19 @@ export function Timer() {
                 strokeWidth="8"
                 fill="none"
                 strokeLinecap="round"
-                initial={{ pathLength: 0 }}
+                strokeDasharray={2 * Math.PI * 155}
                 animate={{
-                  pathLength: context.state !== TimerState.IDLE
-                    ? context.timeRemaining / (
+                  strokeDashoffset: context.state !== TimerState.IDLE
+                    ? (2 * Math.PI * 155) - ((context.timeRemaining / (
                         context.state === TimerState.WORK
                           ? context.settings.work_duration * 60
                           : context.state === TimerState.SHORT_BREAK
                           ? context.settings.short_break_duration * 60
                           : context.settings.long_break_duration * 60
-                      )
-                    : 0
+                      )) * (2 * Math.PI * 155))
+                    : 2 * Math.PI * 155
                 }}
-                style={{
-                  strokeDasharray: `${2 * Math.PI * 155}`,
-                  strokeDashoffset: 0,
-                }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.5, ease: "linear" }}
               />
             </svg>
           </div>
