@@ -1,5 +1,6 @@
 import { TimerState, SessionType, Settings, TimerContext } from '../types';
 import { createSession, updateSession, getSettings, checkAchievements } from './database';
+import { settingsStore } from '../store/settings';
 
 export class TimerService {
   private state: TimerState = TimerState.IDLE;
@@ -13,10 +14,41 @@ export class TimerService {
 
   constructor() {
     this.loadSettings();
+
+    // Subscribe to settings changes
+    settingsStore.subscribe(() => {
+      this.updateTimerFromSettings();
+    });
+  }
+
+  private updateTimerFromSettings() {
+    const storeSettings = settingsStore.getState();
+
+    // Update the settings object with new values
+    if (this.settings) {
+      this.settings.work_duration = storeSettings.focusTime;
+      this.settings.short_break_duration = storeSettings.shortBreakTime;
+      this.settings.long_break_duration = storeSettings.longBreakTime;
+      this.settings.pomodoros_until_long_break = storeSettings.intervalsBeforeLongBreak;
+    }
+
+    // If idle, update the time remaining to reflect new work duration
+    if (this.state === TimerState.IDLE) {
+      this.timeRemaining = storeSettings.focusTime * 60;
+      this.notifyListeners();
+    }
   }
 
   async loadSettings() {
     this.settings = await getSettings();
+    const storeSettings = settingsStore.getState();
+
+    // Initialize settings from store
+    this.settings.work_duration = storeSettings.focusTime;
+    this.settings.short_break_duration = storeSettings.shortBreakTime;
+    this.settings.long_break_duration = storeSettings.longBreakTime;
+    this.settings.pomodoros_until_long_break = storeSettings.intervalsBeforeLongBreak;
+
     if (this.state === TimerState.IDLE) {
       this.timeRemaining = this.settings.work_duration * 60;
     }

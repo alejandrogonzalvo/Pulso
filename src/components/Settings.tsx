@@ -9,19 +9,53 @@ interface SettingsProps {
 }
 
 export function Settings({ isOpen, onClose }: SettingsProps) {
-  const [soundsDisabled, setSoundsDisabled] = useState(settingsStore.getState().soundsDisabled);
+  const [settings, setSettings] = useState(settingsStore.getState());
+  const [inputValues, setInputValues] = useState({
+    focusTime: String(settingsStore.getState().focusTime),
+    shortBreakTime: String(settingsStore.getState().shortBreakTime),
+    longBreakTime: String(settingsStore.getState().longBreakTime),
+    intervalsBeforeLongBreak: String(settingsStore.getState().intervalsBeforeLongBreak),
+  });
 
   useEffect(() => {
     const unsubscribe = settingsStore.subscribe((state) => {
-      setSoundsDisabled(state.soundsDisabled);
+      setSettings(state);
+      setInputValues({
+        focusTime: String(state.focusTime),
+        shortBreakTime: String(state.shortBreakTime),
+        longBreakTime: String(state.longBreakTime),
+        intervalsBeforeLongBreak: String(state.intervalsBeforeLongBreak),
+      });
     });
     return unsubscribe;
   }, []);
 
   const handleToggle = () => {
-    const newValue = !soundsDisabled;
-    setSoundsDisabled(newValue);
-    settingsStore.setSoundsDisabled(newValue);
+    settingsStore.setSoundsDisabled(!settings.soundsDisabled);
+  };
+
+  const handleInputChange = (field: keyof typeof inputValues, value: string) => {
+    setInputValues(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleInputBlur = (field: keyof typeof inputValues, min: number, max: number) => {
+    const value = parseInt(inputValues[field], 10);
+    const validValue = isNaN(value) || value < min ? min : value > max ? max : value;
+
+    switch (field) {
+      case 'focusTime':
+        settingsStore.setFocusTime(validValue);
+        break;
+      case 'shortBreakTime':
+        settingsStore.setShortBreakTime(validValue);
+        break;
+      case 'longBreakTime':
+        settingsStore.setLongBreakTime(validValue);
+        break;
+      case 'intervalsBeforeLongBreak':
+        settingsStore.setIntervalsBeforeLongBreak(validValue);
+        break;
+    }
   };
 
   return (
@@ -51,27 +85,111 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
               Settings
             </h2>
 
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-lg" style={{ color: currentTheme.colors.text.secondary }}>
-                Disable sounds
-              </span>
-              <button
-                onClick={handleToggle}
-                className="relative w-14 h-8 rounded-full transition-colors duration-200"
-                style={{
-                  backgroundColor: soundsDisabled
-                    ? currentTheme.colors.button.primary
-                    : currentTheme.colors.button.secondary,
-                }}
-              >
-                <motion.div
-                  className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md"
-                  animate={{
-                    left: soundsDisabled ? 'calc(100% - 28px)' : '4px',
-                  }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              </button>
+            <div className="space-y-6 mb-8">
+              {/* Timer Duration Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold" style={{ color: currentTheme.colors.text.primary }}>
+                  Timer Durations
+                </h3>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ color: currentTheme.colors.text.secondary }}>
+                    Focus time (minutes)
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={inputValues.focusTime}
+                    onChange={(e) => handleInputChange('focusTime', e.target.value.replace(/\D/g, ''))}
+                    onBlur={() => handleInputBlur('focusTime', 1, 120)}
+                    className="w-20 px-3 py-2 rounded text-center"
+                    style={{
+                      backgroundColor: currentTheme.colors.button.secondary,
+                      color: currentTheme.colors.text.primary,
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ color: currentTheme.colors.text.secondary }}>
+                    Short break (minutes)
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={inputValues.shortBreakTime}
+                    onChange={(e) => handleInputChange('shortBreakTime', e.target.value.replace(/\D/g, ''))}
+                    onBlur={() => handleInputBlur('shortBreakTime', 1, 60)}
+                    className="w-20 px-3 py-2 rounded text-center"
+                    style={{
+                      backgroundColor: currentTheme.colors.button.secondary,
+                      color: currentTheme.colors.text.primary,
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ color: currentTheme.colors.text.secondary }}>
+                    Long break (minutes)
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={inputValues.longBreakTime}
+                    onChange={(e) => handleInputChange('longBreakTime', e.target.value.replace(/\D/g, ''))}
+                    onBlur={() => handleInputBlur('longBreakTime', 1, 120)}
+                    className="w-20 px-3 py-2 rounded text-center"
+                    style={{
+                      backgroundColor: currentTheme.colors.button.secondary,
+                      color: currentTheme.colors.text.primary,
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ color: currentTheme.colors.text.secondary }}>
+                    Intervals before long break
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={inputValues.intervalsBeforeLongBreak}
+                    onChange={(e) => handleInputChange('intervalsBeforeLongBreak', e.target.value.replace(/\D/g, ''))}
+                    onBlur={() => handleInputBlur('intervalsBeforeLongBreak', 1, 10)}
+                    className="w-20 px-3 py-2 rounded text-center"
+                    style={{
+                      backgroundColor: currentTheme.colors.button.secondary,
+                      color: currentTheme.colors.text.primary,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Sound Toggle */}
+              <div className="pt-4 border-t" style={{ borderColor: currentTheme.colors.button.secondary }}>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg" style={{ color: currentTheme.colors.text.secondary }}>
+                    Disable sounds
+                  </span>
+                  <button
+                    onClick={handleToggle}
+                    className="relative w-14 h-8 rounded-full transition-colors duration-200"
+                    style={{
+                      backgroundColor: settings.soundsDisabled
+                        ? currentTheme.colors.button.primary
+                        : currentTheme.colors.button.secondary,
+                    }}
+                  >
+                    <motion.div
+                      className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md"
+                      animate={{
+                        left: settings.soundsDisabled ? 'calc(100% - 28px)' : '4px',
+                      }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
 
             <button

@@ -1,5 +1,11 @@
-type SettingsState = {
+import { updateSettings as updateDbSettings } from '../services/database';
+
+export type SettingsState = {
   soundsDisabled: boolean;
+  focusTime: number; // in minutes
+  shortBreakTime: number; // in minutes
+  longBreakTime: number; // in minutes
+  intervalsBeforeLongBreak: number;
 };
 
 type Listener = (state: SettingsState) => void;
@@ -7,6 +13,10 @@ type Listener = (state: SettingsState) => void;
 class SettingsStore {
   private state: SettingsState = {
     soundsDisabled: false,
+    focusTime: 25,
+    shortBreakTime: 5,
+    longBreakTime: 15,
+    intervalsBeforeLongBreak: 4,
   };
 
   private listeners: Listener[] = [];
@@ -18,6 +28,45 @@ class SettingsStore {
   setSoundsDisabled(disabled: boolean): void {
     this.state.soundsDisabled = disabled;
     this.notifyListeners();
+  }
+
+  setFocusTime(minutes: number): void {
+    this.state.focusTime = minutes;
+    this.notifyListeners();
+    this.persistToDatabase();
+  }
+
+  setShortBreakTime(minutes: number): void {
+    this.state.shortBreakTime = minutes;
+    this.notifyListeners();
+    this.persistToDatabase();
+  }
+
+  setLongBreakTime(minutes: number): void {
+    this.state.longBreakTime = minutes;
+    this.notifyListeners();
+    this.persistToDatabase();
+  }
+
+  setIntervalsBeforeLongBreak(intervals: number): void {
+    this.state.intervalsBeforeLongBreak = intervals;
+    this.notifyListeners();
+    this.persistToDatabase();
+  }
+
+  updateSettings(partial: Partial<SettingsState>): void {
+    this.state = { ...this.state, ...partial };
+    this.notifyListeners();
+    this.persistToDatabase();
+  }
+
+  private async persistToDatabase(): Promise<void> {
+    await updateDbSettings({
+      work_duration: this.state.focusTime,
+      short_break_duration: this.state.shortBreakTime,
+      long_break_duration: this.state.longBreakTime,
+      pomodoros_until_long_break: this.state.intervalsBeforeLongBreak,
+    });
   }
 
   subscribe(listener: Listener): () => void {
