@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { TimerState, TimerContext } from '../types';
 import { timerService } from '../services/timer';
 import { currentTheme, getBackgroundStyle } from '../theme';
+import { playClickSound, playStartClickSound } from '../utils/sound';
 
 export function Timer() {
   const [context, setContext] = useState<TimerContext | null>(null);
@@ -61,6 +62,11 @@ export function Timer() {
                     context.state === TimerState.LONG_BREAK;
 
   const isPaused = context.state === TimerState.PAUSED;
+
+  const handleButtonClick = (action: () => void) => {
+    playClickSound();
+    action();
+  };
 
   return (
     <div
@@ -147,7 +153,10 @@ export function Timer() {
           <div className="flex gap-4 justify-center">
             {context.state === TimerState.IDLE && (
               <motion.button
-                onClick={() => timerService.start()}
+                onClick={() => {
+                  playStartClickSound();
+                  timerService.start();
+                }}
                 className="px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
                 style={{
                   backgroundColor: currentTheme.colors.button.primary,
@@ -163,7 +172,7 @@ export function Timer() {
             {isRunning && (
               <>
                 <motion.button
-                  onClick={() => timerService.pause()}
+                  onClick={() => handleButtonClick(() => timerService.pause())}
                   className="px-8 py-4 backdrop-blur-sm rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
                   style={{
                     backgroundColor: currentTheme.colors.button.secondary,
@@ -175,7 +184,7 @@ export function Timer() {
                   Pause
                 </motion.button>
                 <motion.button
-                  onClick={() => timerService.skip()}
+                  onClick={() => handleButtonClick(() => timerService.skip())}
                   className="px-8 py-4 backdrop-blur-sm rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
                   style={{
                     backgroundColor: currentTheme.colors.button.secondary,
@@ -187,7 +196,7 @@ export function Timer() {
                   Skip
                 </motion.button>
                 <motion.button
-                  onClick={() => timerService.stop()}
+                  onClick={() => handleButtonClick(() => timerService.stop())}
                   className="px-8 py-4 backdrop-blur-sm rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
                   style={{
                     backgroundColor: currentTheme.colors.button.secondary,
@@ -204,7 +213,7 @@ export function Timer() {
             {isPaused && (
               <>
                 <motion.button
-                  onClick={() => timerService.start()}
+                  onClick={() => handleButtonClick(() => timerService.start())}
                   className="px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
                   style={{
                     backgroundColor: currentTheme.colors.button.primary,
@@ -216,7 +225,7 @@ export function Timer() {
                   Resume
                 </motion.button>
                 <motion.button
-                  onClick={() => timerService.stop()}
+                  onClick={() => handleButtonClick(() => timerService.stop())}
                   className="px-8 py-4 backdrop-blur-sm rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
                   style={{
                     backgroundColor: currentTheme.colors.button.secondary,
