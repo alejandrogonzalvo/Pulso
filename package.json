@@ -1,5 +1,5 @@
 {
-  "name": "pulso-pomodoro",
+  "name": "pulso",
   "version": "1.0.0",
   "type": "module",
   "description": "A modern pomodoro timer with floating media player and achievements",

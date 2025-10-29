@@ -47,7 +47,7 @@ A modern, lightweight pomodoro timer application built with Tauri, React, and Ty
 1. Clone the repository
    ```bash
    git clone <repository-url>
-   cd pulso-pomodoro
+   cd pulso
    ```
 
 2. Install dependencies
