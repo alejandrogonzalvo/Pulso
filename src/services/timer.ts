@@ -87,6 +87,7 @@ export class TimerService {
       long_break_duration: 15,
       pomodoros_until_long_break: 4,
       max_cycles: 0,
+      show_title_bar: true,
       auto_start_breaks: false,
       auto_start_work: false,
       notification_sound: true,
@@ -160,7 +161,11 @@ export class TimerService {
     }
 
     await this.transitionToNextState();
-    this.startTimer();
+
+    // Only start timer if not in IDLE state (max cycles might have been reached)
+    if (this.state !== TimerState.IDLE) {
+      this.startTimer();
+    }
     this.notifyListeners();
   }
 
@@ -222,6 +227,16 @@ export class TimerService {
     const settings = this.settings!;
 
     if (this.state === TimerState.WORK) {
+      // Check if max cycles reached (0 means endless)
+      if (settings.max_cycles > 0 && this.sessionCount >= settings.max_cycles) {
+        // Max cycles reached, go to IDLE
+        this.state = TimerState.IDLE;
+        this.timeRemaining = settings.work_duration * 60;
+        this.sessionCount = 0;
+        this.notifyListeners();
+        return;
+      }
+
       // After work, decide between short or long break
       if (this.sessionCount % settings.pomodoros_until_long_break === 0) {
         this.state = TimerState.LONG_BREAK;
@@ -250,15 +265,6 @@ export class TimerService {
       // Always auto-start the timer for the next session
       this.startTimer();
     } else if (this.state === TimerState.SHORT_BREAK || this.state === TimerState.LONG_BREAK) {
-      // Check if max cycles reached (0 means endless)
-      if (settings.max_cycles > 0 && this.sessionCount >= settings.max_cycles) {
-        // Max cycles reached, go to IDLE
-        this.state = TimerState.IDLE;
-        this.timeRemaining = settings.work_duration * 60;
-        this.sessionCount = 0;
-        this.notifyListeners();
-        return;
-      }
 
       // After break, go back to work
       this.state = TimerState.WORK;
