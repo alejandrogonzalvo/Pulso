@@ -208,7 +208,7 @@ export async function getStatistics(): Promise<Statistics> {
 
   // Total sessions
   const totalResult = await database.select<any[]>(
-    'SELECT COUNT(*) as count FROM sessions WHERE completed = 1'
+    'SELECT COUNT(*) as count FROM sessions WHERE completed = "true"'
   );
   const total_sessions = totalResult[0]?.count || 0;
 
@@ -218,7 +218,7 @@ export async function getStatistics(): Promise<Statistics> {
       SUM(CASE WHEN type = 'WORK' THEN duration ELSE 0 END) as work_time,
       SUM(CASE WHEN type IN ('SHORT_BREAK', 'LONG_BREAK') THEN duration ELSE 0 END) as break_time
     FROM sessions
-    WHERE completed = 1
+    WHERE completed = "true"
   `);
   const total_work_time = timeResult[0]?.work_time || 0;
   const total_break_time = timeResult[0]?.break_time || 0;
@@ -229,7 +229,7 @@ export async function getStatistics(): Promise<Statistics> {
   const todayTimestamp = today.getTime();
 
   const todayResult = await database.select<any[]>(
-    'SELECT COUNT(*) as count FROM sessions WHERE completed = 1 AND timestamp >= ?',
+    'SELECT COUNT(*) as count FROM sessions WHERE completed = "true" AND timestamp >= ?',
     [todayTimestamp]
   );
   const sessions_today = todayResult[0]?.count || 0;
@@ -237,7 +237,7 @@ export async function getStatistics(): Promise<Statistics> {
   // Sessions this week
   const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
   const weekResult = await database.select<any[]>(
-    'SELECT COUNT(*) as count FROM sessions WHERE completed = 1 AND timestamp >= ?',
+    'SELECT COUNT(*) as count FROM sessions WHERE completed = "true" AND timestamp >= ?',
     [weekAgo]
   );
   const sessions_this_week = weekResult[0]?.count || 0;
@@ -245,7 +245,7 @@ export async function getStatistics(): Promise<Statistics> {
   // Sessions this month
   const monthAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
   const monthResult = await database.select<any[]>(
-    'SELECT COUNT(*) as count FROM sessions WHERE completed = 1 AND timestamp >= ?',
+    'SELECT COUNT(*) as count FROM sessions WHERE completed = "true" AND timestamp >= ?',
     [monthAgo]
   );
   const sessions_this_month = monthResult[0]?.count || 0;
@@ -272,7 +272,7 @@ async function calculateStreaks(): Promise<{ current_streak: number; longest_str
   const sessions = await database.select<any[]>(`
     SELECT DATE(timestamp / 1000, 'unixepoch') as date
     FROM sessions
-    WHERE completed = 1 AND type = 'WORK'
+    WHERE completed = "true" AND type = 'WORK'
     GROUP BY DATE(timestamp / 1000, 'unixepoch')
     ORDER BY date DESC
   `);

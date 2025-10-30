@@ -5,10 +5,12 @@ import { timerService } from '../services/timer';
 import { currentTheme, getBackgroundStyle } from '../theme';
 import { playClickSound, playStartClickSound } from '../utils/sound';
 import { Settings } from './Settings';
+import { Statistics } from './Statistics';
 
 export function Timer() {
   const [context, setContext] = useState<TimerContext | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = timerService.subscribe((newContext) => {
@@ -100,7 +102,35 @@ export function Timer() {
         </svg>
       </button>
 
+      {/* Statistics Button */}
+      <button
+        onClick={() => setIsStatisticsOpen(true)}
+        className="fixed bottom-4 right-4 w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow z-30"
+        style={{
+          backgroundColor: currentTheme.colors.button.secondary,
+          color: currentTheme.colors.text.primary,
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 3v18h18" />
+          <path d="M18 17V9" />
+          <path d="M13 17V5" />
+          <path d="M8 17v-3" />
+        </svg>
+      </button>
+
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <Statistics isOpen={isStatisticsOpen} onClose={() => setIsStatisticsOpen(false)} />
 
       <div className="text-center">
         <motion.div

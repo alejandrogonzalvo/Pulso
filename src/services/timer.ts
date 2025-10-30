@@ -146,6 +146,13 @@ export class TimerService {
   async skip() {
     await this.completeCurrentSession();
     this.stopTimer();
+
+    // Check for newly unlocked achievements
+    const newAchievements = await checkAchievements();
+    if (newAchievements.length > 0) {
+      this.showAchievementNotification(newAchievements);
+    }
+
     await this.transitionToNextState();
     this.startTimer();
     this.notifyListeners();
@@ -189,7 +196,7 @@ export class TimerService {
       this.showAchievementNotification(newAchievements);
     }
 
-    this.transitionToNextState();
+    await this.transitionToNextState();
   }
 
   private async completeCurrentSession() {
@@ -230,10 +237,8 @@ export class TimerService {
         });
       }
 
-      // Auto-start break if enabled
-      if (settings.auto_start_breaks) {
-        this.startTimer();
-      }
+      // Always auto-start the timer for the next session
+      this.startTimer();
     } else if (this.state === TimerState.SHORT_BREAK || this.state === TimerState.LONG_BREAK) {
       // After break, go back to work
       this.state = TimerState.WORK;
@@ -247,10 +252,8 @@ export class TimerService {
         completed: false,
       });
 
-      // Auto-start work if enabled
-      if (settings.auto_start_work) {
-        this.startTimer();
-      }
+      // Always auto-start the timer for the next session
+      this.startTimer();
     }
 
     this.notifyListeners();
