@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react'
 import { Timer } from './components/Timer'
-import { initDatabase } from './services/database'
+import { initDatabase, getSettings } from './services/database'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 function App() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Initialize database
-    initDatabase().then(() => {
+    // Initialize database and apply settings
+    initDatabase().then(async () => {
+      // Apply title bar setting
+      try {
+        const settings = await getSettings();
+        const window = getCurrentWindow();
+        await window.setDecorations(settings.show_title_bar);
+      } catch (error) {
+        console.error('Failed to apply title bar setting:', error);
+      }
       setIsReady(true);
     }).catch((error) => {
       console.error('Failed to initialize database:', error);

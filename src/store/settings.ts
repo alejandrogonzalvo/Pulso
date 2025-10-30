@@ -2,6 +2,7 @@ import { updateSettings as updateDbSettings } from '../services/database';
 
 export type SettingsState = {
   soundsDisabled: boolean;
+  showTitleBar: boolean;
   focusTime: number; // in minutes
   shortBreakTime: number; // in minutes
   longBreakTime: number; // in minutes
@@ -14,6 +15,7 @@ type Listener = (state: SettingsState) => void;
 class SettingsStore {
   private state: SettingsState = {
     soundsDisabled: false,
+    showTitleBar: true,
     focusTime: 25,
     shortBreakTime: 5,
     longBreakTime: 15,
@@ -30,6 +32,12 @@ class SettingsStore {
   setSoundsDisabled(disabled: boolean): void {
     this.state.soundsDisabled = disabled;
     this.notifyListeners();
+  }
+
+  setShowTitleBar(show: boolean): void {
+    this.state.showTitleBar = show;
+    this.notifyListeners();
+    this.persistToDatabase();
   }
 
   setFocusTime(minutes: number): void {
@@ -75,6 +83,7 @@ class SettingsStore {
       long_break_duration: this.state.longBreakTime,
       pomodoros_until_long_break: this.state.intervalsBeforeLongBreak,
       max_cycles: this.state.maxCycles,
+      show_title_bar: this.state.showTitleBar,
     });
   }
 

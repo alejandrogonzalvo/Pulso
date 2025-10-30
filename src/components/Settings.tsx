@@ -36,6 +36,16 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
     settingsStore.setSoundsDisabled(!settings.soundsDisabled);
   };
 
+  const handleTitleBarToggle = async () => {
+    const newValue = !settings.showTitleBar;
+    settingsStore.setShowTitleBar(newValue);
+
+    // Update Tauri window decorations
+    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+    const window = getCurrentWindow();
+    await window.setDecorations(newValue);
+  };
+
   const handleInputChange = (field: keyof typeof inputValues, value: string) => {
     setInputValues(prev => ({ ...prev, [field]: value }));
   };
@@ -189,8 +199,31 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                 </div>
               </div>
 
-              {/* Sound Toggle */}
-              <div className="pt-4 border-t" style={{ borderColor: currentTheme.colors.button.secondary }}>
+              {/* Toggles */}
+              <div className="pt-4 border-t space-y-4" style={{ borderColor: currentTheme.colors.button.secondary }}>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg" style={{ color: currentTheme.colors.text.secondary }}>
+                    Show title bar
+                  </span>
+                  <button
+                    onClick={handleTitleBarToggle}
+                    className="relative w-14 h-8 rounded-full transition-colors duration-200"
+                    style={{
+                      backgroundColor: settings.showTitleBar
+                        ? currentTheme.colors.button.primary
+                        : currentTheme.colors.button.secondary,
+                    }}
+                  >
+                    <motion.div
+                      className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md"
+                      animate={{
+                        left: settings.showTitleBar ? 'calc(100% - 28px)' : '4px',
+                      }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  </button>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-lg" style={{ color: currentTheme.colors.text.secondary }}>
                     Disable sounds

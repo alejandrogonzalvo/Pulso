@@ -53,6 +53,7 @@ export interface Settings {
   long_break_duration: number;
   pomodoros_until_long_break: number;
   max_cycles: number; // 0 for endless, otherwise number of work sessions before stopping
+  show_title_bar: boolean;
   auto_start_breaks: boolean;
   auto_start_work: boolean;
   notification_sound: boolean;
