@@ -6,6 +6,7 @@ export type SettingsState = {
   shortBreakTime: number; // in minutes
   longBreakTime: number; // in minutes
   intervalsBeforeLongBreak: number;
+  maxCycles: number; // 0 for endless
 };
 
 type Listener = (state: SettingsState) => void;
@@ -17,6 +18,7 @@ class SettingsStore {
     shortBreakTime: 5,
     longBreakTime: 15,
     intervalsBeforeLongBreak: 4,
+    maxCycles: 0,
   };
 
   private listeners: Listener[] = [];
@@ -54,6 +56,12 @@ class SettingsStore {
     this.persistToDatabase();
   }
 
+  setMaxCycles(cycles: number): void {
+    this.state.maxCycles = cycles;
+    this.notifyListeners();
+    this.persistToDatabase();
+  }
+
   updateSettings(partial: Partial<SettingsState>): void {
     this.state = { ...this.state, ...partial };
     this.notifyListeners();
@@ -66,6 +74,7 @@ class SettingsStore {
       short_break_duration: this.state.shortBreakTime,
       long_break_duration: this.state.longBreakTime,
       pomodoros_until_long_break: this.state.intervalsBeforeLongBreak,
+      max_cycles: this.state.maxCycles,
     });
   }
 

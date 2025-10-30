@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS settings (
     short_break_duration INTEGER NOT NULL DEFAULT 5,
     long_break_duration INTEGER NOT NULL DEFAULT 15,
     pomodoros_until_long_break INTEGER NOT NULL DEFAULT 4,
+    max_cycles INTEGER NOT NULL DEFAULT 0,
     auto_start_breaks BOOLEAN NOT NULL DEFAULT 0,
     auto_start_work BOOLEAN NOT NULL DEFAULT 0,
     notification_sound BOOLEAN NOT NULL DEFAULT 1,
@@ -103,12 +104,19 @@ export async function createSession(session: Omit<Session, 'id' | 'created_at'>)
   return result.lastInsertId;
 }
 
-export async function updateSession(id: number, completed: boolean): Promise<void> {
+export async function updateSession(id: number, completed: boolean, actualDuration?: number): Promise<void> {
   const database = await getDatabase();
-  await database.execute(
-    'UPDATE sessions SET completed = ? WHERE id = ?',
-    [completed, id]
-  );
+  if (actualDuration !== undefined) {
+    await database.execute(
+      'UPDATE sessions SET completed = ?, duration = ? WHERE id = ?',
+      [completed, actualDuration, id]
+    );
+  } else {
+    await database.execute(
+      'UPDATE sessions SET completed = ? WHERE id = ?',
+      [completed, id]
+    );
+  }
 }
 
 export async function getSessions(limit?: number): Promise<Session[]> {
@@ -170,6 +178,7 @@ export async function getSettings(): Promise<Settings> {
     short_break_duration: row.short_break_duration,
     long_break_duration: row.long_break_duration,
     pomodoros_until_long_break: row.pomodoros_until_long_break,
+    max_cycles: row.max_cycles ?? 0,
     auto_start_breaks: row.auto_start_breaks === 1,
     auto_start_work: row.auto_start_work === 1,
     notification_sound: row.notification_sound === 1,

@@ -11,6 +11,7 @@ export class TimerService {
   private settings: Settings | null = null;
   private listeners: Set<(context: TimerContext) => void> = new Set();
   private stateBeforePause: TimerState | null = null; // Track state before pausing
+  private initialDuration: number = 0; // Track initial duration for calculating elapsed time
 
   constructor() {
     this.loadSettings();
@@ -30,6 +31,7 @@ export class TimerService {
       this.settings.short_break_duration = storeSettings.shortBreakTime;
       this.settings.long_break_duration = storeSettings.longBreakTime;
       this.settings.pomodoros_until_long_break = storeSettings.intervalsBeforeLongBreak;
+      this.settings.max_cycles = storeSettings.maxCycles;
     }
 
     // If idle, update the time remaining to reflect new work duration
@@ -84,6 +86,7 @@ export class TimerService {
       short_break_duration: 5,
       long_break_duration: 15,
       pomodoros_until_long_break: 4,
+      max_cycles: 0,
       auto_start_breaks: false,
       auto_start_work: false,
       notification_sound: true,
@@ -101,6 +104,7 @@ export class TimerService {
       // Starting a new work session
       this.state = TimerState.WORK;
       this.timeRemaining = this.settings!.work_duration * 60;
+      this.initialDuration = this.timeRemaining;
       this.sessionCount++;
 
       // Create session in database
@@ -132,7 +136,9 @@ export class TimerService {
     this.stopTimer();
 
     if (this.currentSessionId !== null) {
-      await updateSession(this.currentSessionId, false);
+      // Calculate actual elapsed time
+      const elapsedTime = this.initialDuration - this.timeRemaining;
+      await updateSession(this.currentSessionId, true, elapsedTime);
       this.currentSessionId = null;
     }
 
@@ -201,7 +207,9 @@ export class TimerService {
 
   private async completeCurrentSession() {
     if (this.currentSessionId !== null) {
-      await updateSession(this.currentSessionId, true);
+      // Calculate actual elapsed time
+      const elapsedTime = this.initialDuration - this.timeRemaining;
+      await updateSession(this.currentSessionId, true, elapsedTime);
       this.currentSessionId = null;
     }
   }
@@ -218,6 +226,7 @@ export class TimerService {
       if (this.sessionCount % settings.pomodoros_until_long_break === 0) {
         this.state = TimerState.LONG_BREAK;
         this.timeRemaining = settings.long_break_duration * 60;
+        this.initialDuration = this.timeRemaining;
 
         this.currentSessionId = await createSession({
           timestamp: Date.now(),
@@ -228,6 +237,7 @@ export class TimerService {
       } else {
         this.state = TimerState.SHORT_BREAK;
         this.timeRemaining = settings.short_break_duration * 60;
+        this.initialDuration = this.timeRemaining;
 
         this.currentSessionId = await createSession({
           timestamp: Date.now(),
@@ -240,9 +250,20 @@ export class TimerService {
       // Always auto-start the timer for the next session
       this.startTimer();
     } else if (this.state === TimerState.SHORT_BREAK || this.state === TimerState.LONG_BREAK) {
+      // Check if max cycles reached (0 means endless)
+      if (settings.max_cycles > 0 && this.sessionCount >= settings.max_cycles) {
+        // Max cycles reached, go to IDLE
+        this.state = TimerState.IDLE;
+        this.timeRemaining = settings.work_duration * 60;
+        this.sessionCount = 0;
+        this.notifyListeners();
+        return;
+      }
+
       // After break, go back to work
       this.state = TimerState.WORK;
       this.timeRemaining = settings.work_duration * 60;
+      this.initialDuration = this.timeRemaining;
       this.sessionCount++;
 
       this.currentSessionId = await createSession({

@@ -15,6 +15,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
     shortBreakTime: String(settingsStore.getState().shortBreakTime),
     longBreakTime: String(settingsStore.getState().longBreakTime),
     intervalsBeforeLongBreak: String(settingsStore.getState().intervalsBeforeLongBreak),
+    maxCycles: String(settingsStore.getState().maxCycles),
   });
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
         shortBreakTime: String(state.shortBreakTime),
         longBreakTime: String(state.longBreakTime),
         intervalsBeforeLongBreak: String(state.intervalsBeforeLongBreak),
+        maxCycles: String(state.maxCycles),
       });
     });
     return unsubscribe;
@@ -55,6 +57,9 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
       case 'intervalsBeforeLongBreak':
         settingsStore.setIntervalsBeforeLongBreak(validValue);
         break;
+      case 'maxCycles':
+        settingsStore.setMaxCycles(validValue);
+        break;
     }
   };
 
@@ -77,6 +82,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             style={{
               backgroundColor: currentTheme.colors.idle,
               minWidth: '400px',
+              maxHeight: '90vh',
               top: '50%',
               left: '50%',
             }}
@@ -85,7 +91,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
               Settings
             </h2>
 
-            <div className="space-y-6 mb-8">
+            <div className="space-y-6 mb-8 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 180px)' }}>
               {/* Timer Duration Settings */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold" style={{ color: currentTheme.colors.text.primary }}>
@@ -156,6 +162,24 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                     value={inputValues.intervalsBeforeLongBreak}
                     onChange={(e) => handleInputChange('intervalsBeforeLongBreak', e.target.value.replace(/\D/g, ''))}
                     onBlur={() => handleInputBlur('intervalsBeforeLongBreak', 1, 10)}
+                    className="w-20 px-3 py-2 rounded text-center"
+                    style={{
+                      backgroundColor: currentTheme.colors.button.secondary,
+                      color: currentTheme.colors.text.primary,
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ color: currentTheme.colors.text.secondary }}>
+                    Max cycles (0 = endless)
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={inputValues.maxCycles}
+                    onChange={(e) => handleInputChange('maxCycles', e.target.value.replace(/\D/g, ''))}
+                    onBlur={() => handleInputBlur('maxCycles', 0, 100)}
                     className="w-20 px-3 py-2 rounded text-center"
                     style={{
                       backgroundColor: currentTheme.colors.button.secondary,
