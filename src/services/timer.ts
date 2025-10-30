@@ -8,6 +8,7 @@ export class TimerService {
   private intervalId: number | null = null;
   private currentSessionId: number | null = null;
   private sessionCount: number = 0;
+  private cycleCount: number = 0; // Track completed cycles (long breaks)
   private settings: Settings | null = null;
   private listeners: Set<(context: TimerContext) => void> = new Set();
   private stateBeforePause: TimerState | null = null; // Track state before pausing
@@ -147,6 +148,7 @@ export class TimerService {
     this.stateBeforePause = null;
     this.timeRemaining = this.settings?.work_duration ? this.settings.work_duration * 60 : 25 * 60;
     this.sessionCount = 0;
+    this.cycleCount = 0;
     this.notifyListeners();
   }
 
@@ -227,16 +229,6 @@ export class TimerService {
     const settings = this.settings!;
 
     if (this.state === TimerState.WORK) {
-      // Check if max cycles reached (0 means endless)
-      if (settings.max_cycles > 0 && this.sessionCount >= settings.max_cycles) {
-        // Max cycles reached, go to IDLE
-        this.state = TimerState.IDLE;
-        this.timeRemaining = settings.work_duration * 60;
-        this.sessionCount = 0;
-        this.notifyListeners();
-        return;
-      }
-
       // After work, decide between short or long break
       if (this.sessionCount % settings.pomodoros_until_long_break === 0) {
         this.state = TimerState.LONG_BREAK;
@@ -264,9 +256,38 @@ export class TimerService {
 
       // Always auto-start the timer for the next session
       this.startTimer();
-    } else if (this.state === TimerState.SHORT_BREAK || this.state === TimerState.LONG_BREAK) {
+    } else if (this.state === TimerState.SHORT_BREAK) {
+      // After short break, go back to work
+      this.state = TimerState.WORK;
+      this.timeRemaining = settings.work_duration * 60;
+      this.initialDuration = this.timeRemaining;
+      this.sessionCount++;
 
-      // After break, go back to work
+      this.currentSessionId = await createSession({
+        timestamp: Date.now(),
+        duration: settings.work_duration * 60,
+        type: SessionType.WORK,
+        completed: false,
+      });
+
+      // Always auto-start the timer for the next session
+      this.startTimer();
+    } else if (this.state === TimerState.LONG_BREAK) {
+      // After long break, increment cycle count
+      this.cycleCount++;
+
+      // Check if max cycles reached (0 means endless)
+      if (settings.max_cycles > 0 && this.cycleCount >= settings.max_cycles) {
+        // Max cycles reached, go to IDLE
+        this.state = TimerState.IDLE;
+        this.timeRemaining = settings.work_duration * 60;
+        this.sessionCount = 0;
+        this.cycleCount = 0;
+        this.notifyListeners();
+        return;
+      }
+
+      // Continue with next cycle
       this.state = TimerState.WORK;
       this.timeRemaining = settings.work_duration * 60;
       this.initialDuration = this.timeRemaining;
