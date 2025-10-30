@@ -21,8 +21,8 @@
       {
         "assets": [
           {
-            "path": "src-tauri/target/release/bundle/**/*",
-            "label": "Application Bundle"
+            "path": "src-tauri/target/release/bundle/deb/*.deb",
+            "label": "Debian Package"
           }
         ]
       }

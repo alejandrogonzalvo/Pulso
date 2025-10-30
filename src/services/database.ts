@@ -1,5 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
-import { Session, Achievement, Settings, Statistics, SessionType } from '../types';
+import { Session, Achievement, Settings, Statistics } from '../types';
 
 let db: Database | null = null;
 
@@ -102,6 +102,9 @@ export async function createSession(session: Omit<Session, 'id' | 'created_at'>)
     'INSERT INTO sessions (timestamp, duration, type, completed) VALUES (?, ?, ?, ?)',
     [session.timestamp, session.duration, session.type, session.completed]
   );
+  if (result.lastInsertId === undefined) {
+    throw new Error('Failed to create session: no ID returned');
+  }
   return result.lastInsertId;
 }
 
