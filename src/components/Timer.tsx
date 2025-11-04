@@ -6,11 +6,13 @@ import { currentTheme, getBackgroundStyle } from '../theme';
 import { playClickSound, playStartClickSound } from '../utils/sound';
 import { Settings } from './Settings';
 import { Statistics } from './Statistics';
+import { ConfirmDialog } from './ConfirmDialog';
 
 export function Timer() {
   const [context, setContext] = useState<TimerContext | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
+  const [isStopConfirmOpen, setIsStopConfirmOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = timerService.subscribe((newContext) => {
@@ -131,6 +133,15 @@ export function Timer() {
 
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <Statistics isOpen={isStatisticsOpen} onClose={() => setIsStatisticsOpen(false)} />
+      <ConfirmDialog
+        isOpen={isStopConfirmOpen}
+        title="Stop Session?"
+        onConfirm={() => {
+          setIsStopConfirmOpen(false);
+          timerService.stop();
+        }}
+        onCancel={() => setIsStopConfirmOpen(false)}
+      />
 
       <div className="text-center">
         <motion.div
@@ -255,7 +266,7 @@ export function Timer() {
                   Skip
                 </motion.button>
                 <motion.button
-                  onClick={() => handleButtonClick(() => timerService.stop())}
+                  onClick={() => handleButtonClick(() => setIsStopConfirmOpen(true))}
                   className="px-8 py-4 backdrop-blur-sm rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
                   style={{
                     backgroundColor: currentTheme.colors.button.secondary,
@@ -284,7 +295,7 @@ export function Timer() {
                   Resume
                 </motion.button>
                 <motion.button
-                  onClick={() => handleButtonClick(() => timerService.stop())}
+                  onClick={() => handleButtonClick(() => setIsStopConfirmOpen(true))}
                   className="px-8 py-4 backdrop-blur-sm rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow"
                   style={{
                     backgroundColor: currentTheme.colors.button.secondary,
