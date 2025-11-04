@@ -94,6 +94,7 @@ export class TimerService {
       notification_sound: true,
       notification_volume: 50,
       youtube_playlists: [],
+      show_motivational_quotes: true,
     };
   }
 

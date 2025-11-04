@@ -189,6 +189,7 @@ export async function getSettings(): Promise<Settings> {
     notification_sound: row.notification_sound === 1,
     notification_volume: row.notification_volume,
     youtube_playlists: JSON.parse(row.youtube_playlists || '[]'),
+    show_motivational_quotes: row.show_motivational_quotes === 1 || row.show_motivational_quotes === undefined,
   };
 }
 
