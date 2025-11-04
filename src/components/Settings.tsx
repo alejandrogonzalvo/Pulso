@@ -246,6 +246,29 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                     />
                   </button>
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-lg" style={{ color: currentTheme.colors.text.secondary }}>
+                    Show motivational quotes
+                  </span>
+                  <button
+                    onClick={() => settingsStore.setShowMotivationalQuotes(!settings.showMotivationalQuotes)}
+                    className="relative w-14 h-8 rounded-full transition-colors duration-200"
+                    style={{
+                      backgroundColor: settings.showMotivationalQuotes
+                        ? currentTheme.colors.button.primary
+                        : currentTheme.colors.button.secondary,
+                    }}
+                  >
+                    <motion.div
+                      className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md"
+                      animate={{
+                        left: settings.showMotivationalQuotes ? 'calc(100% - 28px)' : '4px',
+                      }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
 

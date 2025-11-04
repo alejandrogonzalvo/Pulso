@@ -59,6 +59,7 @@ export interface Settings {
   notification_sound: boolean;
   notification_volume: number;
   youtube_playlists: string[];
+  show_motivational_quotes: boolean;
 }
 
 export interface TimerContext {

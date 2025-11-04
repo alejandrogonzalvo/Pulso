@@ -8,6 +8,7 @@ export type SettingsState = {
   longBreakTime: number; // in minutes
   intervalsBeforeLongBreak: number;
   maxCycles: number; // 0 for endless
+  showMotivationalQuotes: boolean;
 };
 
 type Listener = (state: SettingsState) => void;
@@ -21,6 +22,7 @@ class SettingsStore {
     longBreakTime: 15,
     intervalsBeforeLongBreak: 4,
     maxCycles: 0,
+    showMotivationalQuotes: true,
   };
 
   private listeners: Listener[] = [];
@@ -70,6 +72,12 @@ class SettingsStore {
     this.persistToDatabase();
   }
 
+  setShowMotivationalQuotes(show: boolean): void {
+    this.state.showMotivationalQuotes = show;
+    this.notifyListeners();
+    this.persistToDatabase();
+  }
+
   updateSettings(partial: Partial<SettingsState>): void {
     this.state = { ...this.state, ...partial };
     this.notifyListeners();
@@ -84,6 +92,7 @@ class SettingsStore {
       pomodoros_until_long_break: this.state.intervalsBeforeLongBreak,
       max_cycles: this.state.maxCycles,
       show_title_bar: this.state.showTitleBar,
+      show_motivational_quotes: this.state.showMotivationalQuotes,
     });
   }
 

@@ -7,19 +7,36 @@ import { playClickSound, playStartClickSound } from '../utils/sound';
 import { Settings } from './Settings';
 import { Statistics } from './Statistics';
 import { ConfirmDialog } from './ConfirmDialog';
+import { getRandomQuote } from '../data/quotes';
+import { settingsStore } from '../store/settings';
 
 export function Timer() {
   const [context, setContext] = useState<TimerContext | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
   const [isStopConfirmOpen, setIsStopConfirmOpen] = useState(false);
+  const [quote, setQuote] = useState(() => getRandomQuote());
+  const [settings, setSettings] = useState(settingsStore.getState());
 
   useEffect(() => {
-    const unsubscribe = timerService.subscribe((newContext) => {
+    let previousState: TimerState | null = null;
+
+    const unsubscribeTimer = timerService.subscribe((newContext) => {
+      if (newContext.state === TimerState.WORK && previousState !== TimerState.WORK) {
+        setQuote(getRandomQuote());
+      }
+      previousState = newContext.state;
       setContext(newContext);
     });
 
-    return unsubscribe;
+    const unsubscribeSettings = settingsStore.subscribe((newSettings) => {
+      setSettings(newSettings);
+    });
+
+    return () => {
+      unsubscribeTimer();
+      unsubscribeSettings();
+    };
   }, []);
 
   if (!context) {
@@ -143,11 +160,12 @@ export function Timer() {
         onCancel={() => setIsStopConfirmOpen(false)}
       />
 
-      <div className="text-center">
+      <div className="flex flex-col items-center justify-center">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
+          className="flex flex-col items-center"
         >
           {/* State Label */}
           <motion.h2
@@ -218,6 +236,23 @@ export function Timer() {
               />
             </svg>
           </div>
+
+          {/* Motivational Quote - Only show during WORK state */}
+          {context.state === TimerState.WORK && settings.showMotivationalQuotes && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-8 px-8 text-center max-w-lg mx-auto"
+            >
+              <p
+                className="text-lg italic"
+                style={{ color: currentTheme.colors.text.secondary }}
+              >
+                "{quote}"
+              </p>
+            </motion.div>
+          )}
 
           {/* Control Buttons */}
           <div className="flex gap-4 justify-center">

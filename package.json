@@ -4,6 +4,9 @@
   "type": "module",
   "description": "A modern pomodoro timer with floating media player and achievements",
   "main": "index.js",
+  "bin": {
+    "pulso": "./cli.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
